@@ -3,12 +3,13 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
+    font-family: "Gill Sans Extrabold", sans-serif;
 }
 
 body {
     background-color: #cde5ee; /* Light sky blue background */
     color: #01173a; /* Deep navy blue text */
+    font-size: 16px;
 }
 
 header {
