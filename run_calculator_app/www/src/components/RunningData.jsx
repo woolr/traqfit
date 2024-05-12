@@ -1,7 +1,10 @@
-// RunningData.js
 import React, { useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
+import DirectionsIcon from '@mui/icons-material/DirectionsRun';
+import TimerIcon from '@mui/icons-material/Timer';
+import SpeedIcon from '@mui/icons-material/Speed';
+import Typography from '@mui/material/Typography';
 
 const RunningData = ({ data, unit }) => {
   const { total_distance, total_time, pace, miles, splits, speeds } = data;
@@ -19,13 +22,13 @@ const RunningData = ({ data, unit }) => {
     let formattedTime = '';
 
     if (hours > 0) {
-      formattedTime += `${hours} hour${hours > 1 ? 's' : ''} `;
+      formattedTime += `${hours} Hour${hours > 1 ? 's' : ''} `;
     }
 
-    formattedTime += `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    formattedTime += `${minutes} Minute${minutes !== 1 ? 's' : ''}`;
 
     if (remainingSeconds > 0) {
-      formattedTime += ` ${remainingSeconds} second${remainingSeconds !== 1 ? 's' : ''}`;
+      formattedTime += ` ${remainingSeconds} Second${remainingSeconds !== 1 ? 's' : ''}`;
     }
 
     return formattedTime.trim();
@@ -55,15 +58,68 @@ const RunningData = ({ data, unit }) => {
   };
 
   return (
-    <div>
-      <h1>Run Summary</h1>
-      <ul>
-        <li>Total Distance: {total_distance} {unit === 'miles' ? 'miles' : 'kilometres'}</li>
-        <li>Total Time: {formatTotalTime()}</li>
-        <li>Average Pace: {formatAveragePace()} {unit === 'miles' ? 'mph' : 'kph'}</li>
-      </ul>
+    <div style={{ textAlign: 'center' }}>
+      <h1 style={{ marginBottom: '10px' }}>Run Summary</h1>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px'  }}>
+        <DirectionsIcon style={{ alignItems: 'center', marginRight: '8px', fontSize: '30px' }} />
+        <Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>
+          Total Distance:&nbsp;
+        </Typography>
+        <Typography variant="subtitle1">
+          {total_distance} {unit === 'miles' ? 'Miles' : 'Kilometres'}
+        </Typography>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+        <TimerIcon style={{ marginRight: '8px', fontSize: '30px' }} />
+        <Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>
+          Total Time:&nbsp;
+        </Typography>
+        <Typography variant="subtitle1">
+          {formatTotalTime()}
+        </Typography>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+        <SpeedIcon style={{ marginRight: '8px', fontSize: '30px' }} />
+        <Typography variant="subtitle1" style={{ fontWeight: 'bold'}}>
+          Average Pace:&nbsp;
+        </Typography>
+        <Typography variant="subtitle1">
+          {formatAveragePace()} {unit === 'miles' ? 'Mph' : 'Kph'}
+        </Typography>
+      </div>
       <div>
-        <Bar data={getSpeedData()} options={{ plugins: { legend: { display: true } }, responsive: true }} />
+        <Bar
+          data={getSpeedData()}
+          options={{
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const speed = context.parsed.y;
+                    const unitLabel = unit === 'miles' ? 'Mph' : 'Kph';
+                    return `Speed: ${speed} ${unitLabel}`;
+                  },
+                },
+              },
+            },
+            responsive: true,
+            scales: {
+              x: {
+                title: {
+                  display: false,
+                  text: 'X Axis Label',
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: `Speed (${unit === 'miles' ? 'Mph' : 'Kph'})`,
+                },
+              },
+            },
+          }}
+        />
       </div>
     </div>
   );

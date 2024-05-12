@@ -11,6 +11,7 @@ function UnitToggle({ unit, setUnit }) {
 
   return (
     <ToggleButtonGroup
+      color="primary"
       value={unit}
       exclusive
       onChange={handleUnitChange}
