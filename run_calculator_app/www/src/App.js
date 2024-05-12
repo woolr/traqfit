@@ -93,8 +93,6 @@ function RunConfig() {
     return totalDistance / (totalTime / 60);
   };
 
-
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (typeof miles !== 'number' || typeof splits !== 'number' || !Array.isArray(speeds)) {
