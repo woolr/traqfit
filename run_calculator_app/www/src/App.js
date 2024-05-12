@@ -13,6 +13,7 @@ function RunConfig() {
   const [validFillSpeed, setValidFillSpeed] = useState(true);
   const [responseData, setResponseData] = useState(null);
   const [unit, setUnit] = useState('miles'); // State to track selected unit
+  const [results, setResults] = useState(null);
 
   const addSplit = () => {
     setSplits(splits + 1);
@@ -66,6 +67,34 @@ function RunConfig() {
     }
   };
 
+  const processSpeeds = (flatSpeeds) => {
+    const processedSpeeds = [];
+    const size = Math.ceil(flatSpeeds.length / splits);
+    for (let i = 0; i < flatSpeeds.length; i += size) {
+      processedSpeeds.push(flatSpeeds.slice(i, i + size));
+    }
+    return processedSpeeds;
+  };
+
+  const calculateTotalDistance = (miles, splits) => {
+    return miles * splits * (1 / splits);
+  };
+
+  const calculateTotalTime = (speeds, splits) => {
+    const splitMinutes = speeds.map(split => {
+      const speedsPerMinute = split.map(speed => speed / 60);
+      const splitTotalMinutes = speedsPerMinute.reduce((total, speed) => total + (1 / speed), 0) / splits;
+      return splitTotalMinutes;
+    });
+    return splitMinutes.reduce((a, b) => a + b, 0);
+  };
+
+  const calculatePace = (totalTime, totalDistance) => {
+    return totalDistance / (totalTime / 60);
+  };
+
+
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (typeof miles !== 'number' || typeof splits !== 'number' || !Array.isArray(speeds)) {
@@ -77,30 +106,28 @@ function RunConfig() {
       return;
     }
     const transposeSpeeds = speeds[0].map((_, colIndex) => speeds.map(row => parseFloat(row[colIndex]) || 0));
-    const requestBody = JSON.stringify({ miles, splits, speeds: transposeSpeeds.map(split => split.map(speed => parseFloat(speed) || 0)) });
-
-    fetch('http://localhost:8000/api/calculate_run', {
-      method: 'POST',
-      body: requestBody,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Success:', data);
-        setResponseData(data);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
+    const totalDistance = calculateTotalDistance(miles, splits);
+    const totalTime = calculateTotalTime(transposeSpeeds, splits);
+    const pace = calculatePace(totalTime, totalDistance);
+    const updateResults = () => {
+        const newResults = {
+        totalDistance: totalDistance,
+        totalTime: totalTime,
+        pace: pace,
+        miles: miles,
+        splits: splits,
+        speeds: transposeSpeeds
+      };
+      setResults(newResults);
+    };
+    updateResults();
   };
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', margin: '50px 70px' }}>
       <div style={{ flex: 1, marginRight: '30px' }}>
         <div style={{ marginTop: '18px', textAlign: 'left' }}>
-          <h1 style={{ display: 'flex', alignItems: 'center' }}>
+          <h1 style={{  fontSize: '60px' ,display: 'flex', alignItems: 'center' }}>
             Run Configuration&nbsp;
             {/* Render UnitToggle component next to the title */}
             <UnitToggle unit={unit} setUnit={setUnit} style={{ marginLeft: '10px', marginTop: '-3px' }} />
@@ -231,9 +258,9 @@ function RunConfig() {
         </div>
       </div>
 
-      {responseData && (
+      {results && (
         <div style={{ flex: 5, marginLeft: '50px' }}>
-          <RunningData data={responseData} unit={unit} />
+          <RunningData data={results} unit={unit} />
         </div>
       )}
     </div>
