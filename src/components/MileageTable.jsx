@@ -1,15 +1,26 @@
-import React from 'react';
-import TextField from '@mui/material/TextField';
+import React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Paper,
+} from "@mui/material";
 
 function MileageTable({ miles, splits, speeds, setSpeeds, unit }) {
   // Calculate the distance of each split and round it to two decimal places
-  const distanceUnit = unit === 'miles' ? 'miles' : 'kms';
+  const distanceUnit = unit === "miles" ? "miles" : "kms";
   const splitDistance = (1 / splits).toFixed(2);
 
   const handleSpeedChange = (splitIndex, mileIndex, newValue) => {
     const newSpeeds = speeds.map((split, idx) => {
       if (idx === splitIndex) {
-        return split.map((speed, index) => index === mileIndex ? newValue : speed);
+        return split.map((speed, index) =>
+          index === mileIndex ? newValue : speed,
+        );
       }
       return split;
     });
@@ -17,49 +28,86 @@ function MileageTable({ miles, splits, speeds, setSpeeds, unit }) {
   };
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th><div style={{ textAlign: 'center' }}>Split</div></th>
-          {Array.from({ length: miles }, (_, index) => (
-            <th key={index}><div style={{ textAlign: 'center' }}>{unit === 'miles' ? `Mile ${index + 1}` : `Km ${index + 1}`}</div></th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {speeds.map((split, splitIndex) => (
-          <tr key={splitIndex}>
-            <td>
-              <div style={{ textAlign: 'center' }}>Split {splitIndex + 1}</div>
-              <div style={{ textAlign: 'center' }}>({splitDistance} {distanceUnit})</div> {/* Display the rounded distance of each split */}
-            </td>
-            {split.map((speed, mileIndex) => (
-              <td key={mileIndex}>
-                <TextField
-                  type="number"
-                  name={`speeds_${mileIndex}_${splitIndex}`}
-                  value={speed}
-                  onChange={(e) => handleSpeedChange(splitIndex, mileIndex, e.target.value)}
-                  required
-                  variant="outlined"
-                  inputProps={{ step: '0.1', min: '0', max: '15' }}
-                  sx={{
-                    width: '90px', // Set width to 70px
-                    height: '70px', // Set height to 70px
-                    borderRadius: '4px', // Apply border radius for a square shape
-                    border: 'none', // Remove border
-                    '& input': {
-                      padding: '16px', // Adjust input padding for better appearance
-                    },
-                    marginLeft: '8px', // Add marginLeft for horizontal space
-                  }}
-                />
-              </td>
+    <TableContainer
+      style={{
+        marginBottom: "50px",
+        marginTop: "30px",
+        backgroundColor: "#cde5ee", // Dark blue background
+        color: "#01173a", // Deep navy blue text
+      }}
+      className="resizable-component"
+    >
+      <Table sx={{ borderColor: "white" }}>
+        <TableHead>
+          <TableRow>
+            <TableCell align="center" sx={{ color: "#01173a" }}>
+              Split
+            </TableCell>
+            {Array.from({ length: miles }, (_, index) => (
+              <TableCell align="center" sx={{ color: "#01173a" }} key={index}>
+                {unit === "miles" ? `Mile ${index + 1}` : `Km ${index + 1}`}
+              </TableCell>
             ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {speeds.map((split, splitIndex) => (
+            <TableRow key={splitIndex}>
+              <TableCell align="center" sx={{ color: "#01173a" }}>
+                <div>{splitIndex + 1}</div>
+                <div>
+                  ({splitDistance} {distanceUnit})
+                </div>
+              </TableCell>
+              {split.map((speed, mileIndex) => (
+                <TableCell
+                  key={mileIndex}
+                  align="center"
+                  sx={{ color: "#01173a" }}
+                >
+                  <TextField
+                    type="number"
+                    name={`speeds_${mileIndex}_${splitIndex}`}
+                    value={speed}
+                    onChange={(e) =>
+                      handleSpeedChange(splitIndex, mileIndex, e.target.value)
+                    }
+                    required
+                    variant="outlined"
+                    inputProps={{ step: "0.1", min: "0", max: "15" }}
+                    sx={{
+                      width: "80px",
+                      height: "40px",
+                      borderRadius: "4px",
+                      border: "none",
+                      "& input": {
+                        padding: "18px",
+                        color: "black", // White text in the input
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": {
+                          borderColor: "#01173a", // White border for the input
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#01173a", // White border on hover
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#01173a", // White border when focused
+                        },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "01173a", // White label text
+                      },
+                      marginLeft: "8px",
+                    }}
+                  />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 

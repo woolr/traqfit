@@ -2,7 +2,15 @@ import React, { useState } from "react";
 import RunningData from "./components/RunningData";
 import MileageTable from "./components/MileageTable";
 import TextField from "@mui/material/TextField"; // Import Material-UI TextField
+import Slider from "@mui/material/Slider"; // Import Material-UI Slider
+import Grid from "@mui/material/Grid";
+import Input from "@mui/material/Input";
+import Typography from "@mui/material/Typography";
 import UnitToggle from "./components/UnitToggle"; // Import UnitToggle component
+import Footer from "./components/Footer"; // Import Footer component
+import InputAdornment from "@mui/material/InputAdornment";
+import IconButton from "@mui/material/IconButton";
+import { Add, Remove } from "@mui/icons-material";
 import "./App.css";
 
 export default function App() {
@@ -16,19 +24,6 @@ export default function App() {
   const [unit, setUnit] = useState("miles"); // State to track selected unit
   const [results, setResults] = useState(null);
 
-  const addSplit = () => {
-    setSplits(splits + 1);
-    setSpeeds([...speeds, Array(miles).fill("")]);
-  };
-
-  const removeSplit = () => {
-    if (splits > 1) {
-      setSplits(splits - 1);
-      speeds.pop();
-      setSpeeds([...speeds]);
-    }
-  };
-
   const clearSpeedGrid = () => {
     setSpeeds(speeds.map((split) => split.map(() => "")));
   };
@@ -37,7 +32,7 @@ export default function App() {
     const newMiles = parseInt(e.target.value, 10);
     if (!isNaN(newMiles) && newMiles > 0) {
       setMiles(newMiles);
-      const newSpeeds = speeds.map((split) => Array(newMiles).fill(""));
+      const newSpeeds = speeds.map((split) => Array(newMiles).fill(fillSpeed));
       setSpeeds(newSpeeds);
     }
   };
@@ -47,10 +42,56 @@ export default function App() {
     if (!isNaN(newSplits) && newSplits > 0) {
       setSplits(newSplits);
       const newSpeeds = Array.from({ length: newSplits }, () =>
-        Array(miles).fill(""),
+        Array(miles).fill(fillSpeed),
       );
       setSpeeds(newSpeeds);
     }
+  };
+
+  const incrementMiles = () => {
+    setMiles((prevMiles) => {
+      const newMiles = Math.min(prevMiles + 1, 30);
+      setSpeeds((prevSpeeds) =>
+        prevSpeeds.map((split) => {
+          const updatedSplit = [...split];
+          updatedSplit.push(fillSpeed); // Add the new value from fillSpeed to the end of the split
+          return updatedSplit;
+        }),
+      );
+      return newMiles;
+    });
+  };
+
+  const decrementMiles = () => {
+    setMiles((prevMiles) => {
+      const newMiles = Math.max(prevMiles - 1, 0);
+      setSpeeds((prevSpeeds) =>
+        prevSpeeds.map((split) => Array(newMiles).fill(fillSpeed)),
+      );
+      return newMiles;
+    });
+  };
+
+  const incrementSplits = () => {
+    setSplits((prevSplits) => {
+      const newSplits = Math.min(prevSplits + 1, 30);
+      setSpeeds((prevSpeeds) => {
+        const updatedSpeeds = [...prevSpeeds];
+        while (updatedSpeeds.length < newSplits) {
+          updatedSpeeds.push(Array(miles).fill(fillSpeed));
+        }
+        return updatedSpeeds;
+      });
+      return newSplits;
+    });
+  };
+
+  const decrementSplits = () => {
+    setSplits((prevSplits) => {
+      const newSplits = Math.max(prevSplits - 1, 0);
+      setSpeeds((prevSpeeds) => prevSpeeds.slice(0, newSplits));
+      return newSplits;
+    });
   };
 
   const handleFillSpeedChange = (e) => {
@@ -130,177 +171,303 @@ export default function App() {
 
   return (
     <main>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          margin: "50px 70px",
-        }}
-      >
-        <div style={{ flex: 1, marginRight: "30px" }}>
-          <div style={{ marginTop: "18px", textAlign: "left" }}>
-            <h1
-              style={{
-                fontSize: "60px",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              Run Configuration&nbsp;
-              {/* Render UnitToggle component next to the title */}
+      <div style={{ padding: "20px" }}></div>
+      <div className="container-full">
+        <div className="container-inputs" id="Title and Params">
+          <div className="container" id="title and toggle">
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <h1
+                className="title"
+                style={{ marginBottom: "0px", fontSize: "40px" }}
+              >
+                Run Configuration
+              </h1>
+              <span style={{ padding: "10px" }}> </span>
               <UnitToggle
                 unit={unit}
                 setUnit={setUnit}
-                style={{ marginLeft: "10px", marginTop: "-3px" }}
+                style={{ margin: "0px" }}
               />
-            </h1>
-            <TextField
-              label={`Total ${unit === "miles" ? "Miles" : "Kilometres"}`}
-              type="number"
-              value={miles}
-              onChange={handleMilesChange}
-              variant="outlined"
-              inputProps={{ min: 1 }}
-              required
-              style={{
-                marginBottom: "18px",
-                marginTop: "16px",
-                marginRight: "8px",
-              }}
-            />
-            <TextField
-              label="Number of Splits"
-              type="number"
-              value={splits}
-              onChange={handleSplitsChange}
-              variant="outlined"
-              inputProps={{ min: 1 }}
-              required
-              style={{ marginBottom: "18px", marginTop: "16px" }}
-            />
-
-            <form onSubmit={handleSubmit} style={{ textAlign: "left" }}>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <TextField
-                  id="fillSpeed"
-                  label={`Fill Speed (0-15 ${unit === "miles" ? "Mph" : "Kph"})`}
-                  type="number"
-                  value={fillSpeed}
-                  onChange={handleFillSpeedChange}
-                  variant="outlined"
-                  inputProps={{ step: "0.1", min: "0", max: "15" }}
-                  required
-                  style={{
-                    width: "300px",
-                    marginRight: "12px",
-                    marginBottom: "15px",
-                    borderColor: validFillSpeed ? "initial" : "red",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleGoButtonClick}
-                  disabled={!validFillSpeed}
-                  style={{
-                    fontSize: "16px", // Adjust the font size
-                    padding: "10px 20px", // Adjust the padding
-                    borderRadius: "8px", // Apply border radius for a rounded shape
-                    color: "white", // Set text color
-                    border: "none", // Remove border
-                    cursor: "pointer", // Show pointer cursor on hover
-                    marginBottom: "15px",
-                    marginRight: "2px",
-                  }}
-                >
-                  Go!
-                </button>
-                <button
-                  type="button"
-                  onClick={clearSpeedGrid}
-                  style={{
-                    fontSize: "16px", // Adjust the font size
-                    padding: "10px 20px", // Adjust the padding
-                    borderRadius: "8px", // Apply border radius for a rounded shape
-                    color: "white", // Set text color
-                    border: "none", // Remove border
-                    cursor: "pointer", // Show pointer cursor on hover
-                    marginLeft: "8px", // Add marginLeft for spacing between buttons
-                    marginBottom: "15px",
-                  }}
-                >
-                  Clear All
-                </button>
-              </div>
-              <div>
-                <button
-                  type="submit"
-                  style={{
-                    fontSize: "16px", // Adjust the font size
-                    padding: "10px 20px", // Adjust the padding
-                    borderRadius: "8px", // Apply border radius for a rounded shape
-                    backgroundColor: "#2196f3", // Set background color
-                    color: "white", // Set text color
-                    border: "none", // Remove border
-                    cursor: "pointer", // Show pointer cursor on hover
-                  }}
-                >
-                  Calculate
-                </button>
-                <span style={{ margin: "4px" }}></span>
-                <button
-                  type="button"
-                  onClick={addSplit}
-                  style={{
-                    fontSize: "16px", // Adjust the font size
-                    padding: "10px 20px", // Adjust the padding
-                    borderRadius: "8px", // Apply border radius for a rounded shape
-                    backgroundColor: "#2196f3", // Set background color
-                    color: "white", // Set text color
-                    border: "none", // Remove border
-                    cursor: "pointer", // Show pointer cursor on hover
-                    marginLeft: "8px", // Add marginLeft for spacing between buttons
-                  }}
-                >
-                  Add Split
-                </button>
-                <span style={{ margin: "4px" }}></span>
-                <button
-                  type="button"
-                  onClick={removeSplit}
-                  style={{
-                    fontSize: "16px", // Adjust the font size
-                    padding: "10px 20px", // Adjust the padding
-                    borderRadius: "8px", // Apply border radius for a rounded shape
-                    backgroundColor: "#2196f3", // Set background color
-                    color: "white", // Set text color
-                    border: "none", // Remove border
-                    cursor: "pointer", // Show pointer cursor on hover
-                    marginBottom: "10px", // Add marginBottom for spacing below the button
-                    marginLeft: "8px",
-                  }}
-                >
-                  Remove Split
-                </button>
-              </div>
-              <div>
-                <MileageTable
-                  miles={miles}
-                  splits={splits}
-                  speeds={speeds}
-                  setSpeeds={setSpeeds}
-                  unit={unit}
-                />
-              </div>
-            </form>
+            </div>
+          </div>
+          <div
+            className="container-input-grid"
+            id="Params"
+            style={{ padding: "0px", justifyContent: "center" }}
+          >
+            <div className="container-params">
+              <Grid container spacing={1} alignItems="center">
+                <Grid item>
+                  <Typography id="slider-label" gutterBottom>
+                    {`Total ${unit === "miles" ? "Miles:" : "Kilometres:"}`}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <TextField
+                    variant="standard"
+                    value={miles}
+                    type="number"
+                    size="large"
+                    onChange={handleMilesChange}
+                    sx={{
+                      width: "310px",
+                      height: "70px",
+                      "& input": {
+                        padding: "16px",
+                        textAlign: "center", // Align text content horizontally to the center
+                      },
+                      marginLeft: "20px",
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <IconButton
+                            onClick={decrementMiles}
+                            aria-label="decrement miles"
+                          >
+                            <Remove />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={incrementMiles}
+                            aria-label="increment miles"
+                          >
+                            <Add />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      style: {
+                        fontSize: "1.2rem", // Increase font size for better readability
+                        padding: "1px", // Add padding for touch interaction
+                      },
+                    }}
+                    fullWidth // Ensure input takes full width of the container
+                    style={{
+                      margin: "10px 0", // Add margin for spacing
+                    }}
+                    InputLabelProps={{
+                      shrink: true, // Keep the label shrunk to avoid overlaying with the input value
+                    }}
+                  />
+                </Grid>
+              </Grid>
+              <Slider
+                label={`Total ${unit === "miles" ? "Miles" : "Kilometres"}`}
+                value={miles}
+                onChange={handleMilesChange}
+                min={1}
+                max={30}
+                step={1}
+                marks
+                valueLabelDisplay="auto"
+                defaultValue={3}
+                sx={{
+                  marginBottom: "0px",
+                  marginTop: "0px",
+                  marginRight: "8px",
+                  width: "400px",
+                }}
+              />
+              <Grid container spacing={1} alignItems="center">
+                <Grid item>
+                  <Typography id="slider-label" gutterBottom>
+                    {`Number of Splits:`}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <TextField
+                    variant="standard"
+                    value={splits}
+                    onChange={handleSplitsChange}
+                    type="number"
+                    size="large"
+                    sx={{
+                      width: "265px",
+                      height: "70px",
+                      "& input": {
+                        padding: "16px",
+                        textAlign: "center", // Align text content horizontally to the center
+                      },
+                      marginLeft: "20px",
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <IconButton
+                            onClick={decrementSplits}
+                            aria-label="decrement splits"
+                          >
+                            <Remove />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={incrementSplits}
+                            aria-label="increment splits"
+                          >
+                            <Add />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      style: {
+                        fontSize: "1.2rem", // Increase font size for better readability
+                        padding: "1px", // Add padding for touch interaction
+                      },
+                    }}
+                    fullWidth // Ensure input takes full width of the container
+                    style={{
+                      margin: "10px 0", // Add margin for spacing
+                    }}
+                    InputLabelProps={{
+                      shrink: true, // Keep the label shrunk to avoid overlaying with the input value
+                    }}
+                  />
+                </Grid>
+              </Grid>
+              <Slider
+                label="Number of Splits"
+                value={splits}
+                onChange={handleSplitsChange}
+                min={1}
+                max={10}
+                step={1}
+                marks
+                valueLabelDisplay="auto"
+                defaultValue={3}
+                sx={{
+                  marginBottom: "18px",
+                  marginTop: "5px",
+                  marginRight: "8px",
+                  width: "400px",
+                }}
+              />
+              <form onSubmit={handleSubmit} style={{ textAlign: "left" }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <TextField
+                    id="fillSpeed"
+                    label={`Fill Speed (0-15 ${unit === "miles" ? "Mph" : "Kph"})`}
+                    type="number"
+                    value={fillSpeed}
+                    onChange={handleFillSpeedChange}
+                    variant="outlined"
+                    inputProps={{ step: "0.1", min: "0", max: "15" }}
+                    style={{
+                      width: "210px",
+                      marginRight: "12px",
+                      marginBottom: "15px",
+                      borderColor: validFillSpeed ? "initial" : "red",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleGoButtonClick}
+                    disabled={!validFillSpeed}
+                    style={{
+                      fontSize: "16px",
+                      padding: "15px 20px",
+                      borderRadius: "8px",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer",
+                      marginBottom: "15px",
+                      marginRight: "2px",
+                    }}
+                  >
+                    Go!
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearSpeedGrid}
+                    style={{
+                      fontSize: "16px",
+                      padding: "15px 10px",
+                      borderRadius: "8px",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer",
+                      marginLeft: "8px",
+                      marginBottom: "15px",
+                    }}
+                  >
+                    Clear All
+                  </button>
+                </div>
+                <div style={{ marginTop: "12px" }}>
+                  <button
+                    type="submit"
+                    style={{
+                      fontSize: "16px",
+                      padding: "15px 20px",
+                      borderRadius: "8px",
+                      backgroundColor: "#2196f3",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Calculate
+                  </button>
+                  <span style={{ margin: "4px" }}></span>
+                  <button
+                    type="button"
+                    onClick={incrementSplits}
+                    style={{
+                      fontSize: "16px",
+                      padding: "15px 20px",
+                      borderRadius: "8px",
+                      backgroundColor: "#2196f3",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer",
+                      marginLeft: "8px",
+                    }}
+                  >
+                    Add Split
+                  </button>
+                  <span style={{ margin: "4px" }}></span>
+                  <button
+                    type="button"
+                    onClick={decrementSplits}
+                    style={{
+                      fontSize: "16px",
+                      padding: "15px 20px",
+                      borderRadius: "8px",
+                      backgroundColor: "#2196f3",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer",
+                      marginBottom: "10px",
+                      marginLeft: "8px",
+                    }}
+                  >
+                    Remove Split
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
-
-        {results && (
-          <div style={{ flex: 5, marginLeft: "50px" }}>
-            <RunningData data={results} unit={unit} />
-          </div>
-        )}
+        <MileageTable
+          miles={miles}
+          splits={splits}
+          speeds={speeds}
+          setSpeeds={setSpeeds}
+          unit={unit}
+        />
+        <div id="Run Summary">
+          {results && (
+            <div className="right-panel">
+              <RunningData data={results} unit={unit} />
+            </div>
+          )}
+        </div>
       </div>
+      <Footer />
     </main>
   );
 }
